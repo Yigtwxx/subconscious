@@ -7,13 +7,13 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Paths
-    BASE_DIR: Path = Path(__file__).parent
+    BASE_DIR: Path = Path(__file__).parent.parent
     DATA_DIR: Path = BASE_DIR / "data"
     DB_PATH: Path = DATA_DIR / "memory.db"
     CHROMA_DIR: Path = DATA_DIR / "chroma"
 
     # LLM
-    OLLAMA_MODEL: str = "qwen2.5-coder:7b-instruct-q4_K_M"
+    OLLAMA_MODEL: str = "llama3.1:8b"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
 
     # Memory

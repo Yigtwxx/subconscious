@@ -2,10 +2,12 @@
 Subconscious — Web API (FastAPI)
 
 REST API + WebSocket for the subconscious dashboard.
+Zero HTML files — the app shell is generated dynamically from Python.
 """
 import sys
 import os
 import json
+import glob
 import asyncio
 from typing import Optional
 from contextlib import asynccontextmanager
@@ -14,10 +16,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from subconscious.engine import SubconsciousEngine
+from src.engine import SubconsciousEngine
 
 # ─── Engine singleton ────────────────────────────────────────────────────────
 engine: SubconsciousEngine = None  # type: ignore
@@ -38,22 +40,46 @@ def set_engine(ext_engine: SubconsciousEngine):
 async def lifespan(app: FastAPI):
     """Start dream daemon on startup."""
     e = get_engine()
-    e.start_dreaming(interval_seconds=300)
+    e.dream.start_background(interval_seconds=300)
     yield
-    e.stop_dreaming()
+    e.dream.stop()
 
 
 app = FastAPI(
     title="Subconscious API",
-    version="0.3.0",
-    description="🧠 AI Bilinçaltı Framework API",
+    version="0.4.0",
+    description="🧠 AI Bilinçaltı Framework API — Pure TSX, Zero HTML",
     lifespan=lifespan,
 )
 
-# Serve static files
-static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
-if os.path.exists(static_dir):
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+# Serve Vite-built static assets (JS/CSS bundles) from frontend/dist
+static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "dist")
+assets_dir = os.path.join(static_dir, "assets")
+
+if os.path.exists(assets_dir):
+    app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+
+def _discover_assets():
+    """Auto-discover JS and CSS filenames from the Vite build output."""
+    js_file = ""
+    css_file = ""
+    if os.path.exists(assets_dir):
+        # Match both hashed (index-XXXX.js) and non-hashed (index.js) names
+        for f in os.listdir(assets_dir):
+            if f.endswith(".js") and f.startswith("index"):
+                js_file = f
+            elif f.endswith(".css") and f.startswith("index"):
+                css_file = f
+    return js_file, css_file
+
+
+def _generate_app_shell() -> str:
+    """Generate the minimal app shell dynamically — no .html file required."""
+    js_file, css_file = _discover_assets()
+    css_tag = f'<link rel="stylesheet" href="/assets/{css_file}">' if css_file else ""
+    js_tag = f'<script type="module" src="/assets/{js_file}"></script>' if js_file else ""
+    return f"""<!doctype html><html lang="tr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>🧠 Subconscious — AI Dashboard</title>{css_tag}</head><body><div id="root"></div>{js_tag}</body></html>"""
 
 
 # ─── Models ───────────────────────────────────────────────────────────────────
@@ -71,7 +97,7 @@ class ChatResponse(BaseModel):
 
 @app.get("/")
 async def index():
-    return FileResponse(os.path.join(static_dir, "index.html"))
+    return HTMLResponse(_generate_app_shell())
 
 
 @app.post("/api/chat", response_model=ChatResponse)
@@ -87,7 +113,7 @@ async def stats():
         "memory": e.get_memory_stats(),
         "associations": e.get_association_stats(),
         "emotions": e.get_emotional_trend(),
-        "dream": e.get_dream_stats(),
+        "dream": e.dream.stats(),
     }
 
 
@@ -119,13 +145,13 @@ async def memories(limit: int = 20):
 
 @app.post("/api/dream")
 async def dream_now():
-    report = get_engine().dream_now(use_llm=True)
+    report = get_engine().dream.dream_once(use_llm=True)
     return report.to_dict()
 
 
 @app.get("/api/dream/thoughts")
 async def dream_thoughts(limit: int = 10):
-    return get_engine().get_dream_thoughts(limit)
+    return get_engine().dream.get_dream_thoughts(limit)
 
 
 # ─── WebSocket for real-time updates ─────────────────────────────────────────
@@ -154,7 +180,7 @@ async def websocket_endpoint(ws: WebSocket):
                     "memory": e.get_memory_stats(),
                     "associations": e.get_association_stats(),
                     "emotions": e.get_emotional_trend(),
-                    "dream": e.get_dream_stats(),
+                    "dream": e.dream.stats(),
                 }
                 for client in connected_clients:
                     try:
@@ -164,7 +190,7 @@ async def websocket_endpoint(ws: WebSocket):
                         pass
 
             elif msg.get("type") == "dream":
-                report = get_engine().dream_now(use_llm=True)
+                report = get_engine().dream.dream_once(use_llm=True)
                 await ws.send_json({
                     "type": "dream_report",
                     "data": report.to_dict(),

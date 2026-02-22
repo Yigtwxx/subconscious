@@ -18,7 +18,7 @@ from typing import Optional
 import networkx as nx
 
 from config import settings
-from subconscious.memory import MemoryManager, Memory
+from src.memory import MemoryManager, Memory
 
 
 # ─── Data Models ──────────────────────────────────────────────────────────────

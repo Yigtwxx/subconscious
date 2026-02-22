@@ -17,11 +17,11 @@ from typing import Optional
 import ollama
 
 from config import settings
-from subconscious.memory import MemoryManager
-from subconscious.associations import AssociationEngine
-from subconscious.emotions import EmotionalTagger, EmotionCategory
-from subconscious.dream import DreamDaemon, DreamReport
-from subconscious.prompts import (
+from src.memory import MemoryManager
+from src.associations import AssociationEngine
+from src.emotions import EmotionalTagger, EmotionCategory
+from src.dream import DreamDaemon, DreamReport
+from src.prompts import (
     SUBCONSCIOUS_ANALYSIS,
     INTUITION_INJECTION,
     SYSTEM_PROMPT,

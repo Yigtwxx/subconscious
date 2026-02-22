@@ -23,9 +23,9 @@ from typing import Optional, Callable
 import ollama
 
 from config import settings
-from subconscious.memory import MemoryManager, Memory
-from subconscious.associations import AssociationEngine
-from subconscious.emotions import EmotionalTagger
+from src.memory import MemoryManager, Memory
+from src.associations import AssociationEngine
+from src.emotions import EmotionalTagger
 
 logger = logging.getLogger("subconscious.dream")
 

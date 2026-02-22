@@ -72,17 +72,22 @@ print(result["subconscious"])  # çağrışımlar, sezgiler, duygusal ton
 
 ```
 subconscious/
-├── cli.py                  # Etkileşimli terminal arayüzü
-├── config.py               # Ayarlar (Pydantic)
-├── requirements.txt        # Bağımlılıklar
-├── subconscious/
-│   ├── __init__.py
-│   ├── engine.py           # 🧠 Ana bilinçaltı motoru
-│   ├── memory.py           # 💾 İki katmanlı bellek (STM + LTM)
-│   └── prompts.py          # 📝 Prompt şablonları
-└── data/                   # (otomatik oluşur)
-    ├── memory.db            # SQLite — kısa süreli bellek
-    └── chroma/              # ChromaDB — uzun süreli bellek
+├── backend/                # Python FastAPI & AI Motoru
+│   ├── cli.py              # Etkileşimli terminal arayüzü
+│   ├── config.py           # Ayarlar (Pydantic)
+│   ├── requirements.txt    # Bağımlılıklar
+│   ├── server.py           # Web API ve UI sunucusu
+│   ├── start.py            # Başlatıcı
+│   └── subconscious/       # 🧠 Ana bilinçaltı motoru
+├── frontend/               # React, TypeScript, Vite Web Arayüzü
+│   ├── src/                # Arayüz kaynak kodları
+│   ├── package.json        
+│   └── vite.config.ts      
+├── data/                   # SQLite ve ChromaDB veritabanları
+│   ├── memory.db           
+│   └── chroma/             
+├── README.md
+└── .gitignore 
 ```
 
 ## 🔮 Yol Haritası

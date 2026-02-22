@@ -17,7 +17,7 @@ from rich.table import Table
 from rich.tree import Tree
 from rich import box
 
-from subconscious.engine import SubconsciousEngine
+from src.engine import SubconsciousEngine
 
 console = Console()
 
